@@ -15,9 +15,7 @@ DB_PATH = os.getenv("DB_PATH", "data/listings.db")
 
 # Search Criteria
 TARGET_CONDOS = [
-    "Flamingo Valley",
-    "Mandarin Gardens"
-    # Add more condo names here
+    "Flamingo Valley"
 ]
 
 # Simple criteria string to guide the LLM
