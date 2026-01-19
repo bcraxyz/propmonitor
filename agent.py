@@ -43,34 +43,38 @@ def run_scraper_job():
                     
                     res = response[0] if isinstance(response, tuple) else response
                     
+                    items = []
                     if isinstance(res, dict):
-                        print(f"DEBUG: Response keys for {condo}: {res.keys()}")
+                        items = res.get('web') or res.get('data') or []
+                    else:
+                        items = getattr(res, 'web', getattr(res, 'data', []))
                     
-                    data_list = []
-                    if isinstance(res, list):
-                        data_list = res
-                    elif isinstance(res, dict):
-                        data_list = res.get('web') or res.get('data') or res.get('results') or []
-                    
-                    if not data_list:
-                        print(f"No results found for {condo} on {site}. Raw: {str(res)[:100]}")
+                    if not items:
+                        print(f"No results found for {condo} on {site}")
                         continue
                 
-                    print(f"Success! Found {len(data_list)} potential links for {condo}")
+                    print(f"Processing {len(items)} items for {condo}...")
 
-                    for item in data_list:
-                        raw_content = item.get('markdown', item.get('content', ''))[:15000] 
-                        url = item.get('url', '')
-                        
-                        if not raw_content or len(raw_content) < 100:
-                            print(f"Skipping {url}: Content too short.")
+                    for item in items:
+                        # Detect if item is a Document object or a dictionary
+                        if hasattr(item, 'markdown'):
+                            raw_content = item.markdown
+                            url = item.url
+                        elif isinstance(item, dict):
+                            raw_content = item.get('markdown') or item.get('content')
+                            url = item.get('url')
+                        else:
                             continue
-                        
-                        extracted_data = parse_with_gemini(raw_content, url, condo)
+
+                        if not raw_content or not url:
+                            continue
+
+                        extracted_data = parse_with_llm(raw_content, url, condo)
                         
                         if extracted_data:
                             extracted_data['scraped_at'] = datetime.datetime.now().isoformat()
                             db.save_listing(extracted_data)
+                            print(f"Successfully saved: {url}")
                     
                     # Brief pause to respect rate limits between site searches
                     time.sleep(1)
