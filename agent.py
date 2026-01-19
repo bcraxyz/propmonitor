@@ -29,35 +29,42 @@ def run_scraper_job():
         db.init_db()
         
         for condo in config.TARGET_CONDOS:
-            # We explicitly check both platforms
             for site in ["propertyguru.com.sg", "99.co"]:
                 print(f"Scraping for {condo} on {site}...")
                 
                 query = f"site:{site} {condo} {config.CRITERIA_DESC}"
                 
                 try:
-                    # Modern Firecrawl SDK signature (no nested params)
-                    results = firecrawl.search(
+                    response = firecrawl.search(
                         query, 
                         limit=5,
                         scrape_options={"formats": ["markdown"]}
                     )
                     
-                    # Handle Firecrawl returning a dict or a direct list
-                    data_list = results.get('data', []) if isinstance(results, dict) else results
+                    if isinstance(response, tuple):
+                        results = response[0]
+                    else:
+                        results = response
+
+                    data_list = []
+                    if isinstance(results, dict):
+                        data_list = results.get('data', [])
+                    elif isinstance(results, list):
+                        data_list = results
                     
                     if not data_list:
                         print(f"No results found for {condo} on {site}")
                         continue
                 
                     for item in data_list:
-                        # Extract markdown content and URL
+                        # Some versions use 'markdown', others 'content'
                         raw_content = item.get('markdown', item.get('content', ''))[:15000] 
                         url = item.get('url', '')
                         
-                        if not url: continue
+                        if not url: 
+                            continue
                         
-                        # 2. Extract Data using Gemini
+                        # Extract Data using Gemini
                         extracted_data = parse_with_gemini(raw_content, url, condo)
                         
                         if extracted_data:
