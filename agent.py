@@ -48,7 +48,7 @@ def run_scraper_job():
 
                     data_list = []
                     if isinstance(results, dict):
-                        data_list = results.get('data', [])
+                        data_list = results.get('web', results.get('data', []))
                     elif isinstance(results, list):
                         data_list = results
                     
@@ -57,15 +57,12 @@ def run_scraper_job():
                         continue
                 
                     for item in data_list:
-                        # Some versions use 'markdown', others 'content'
                         raw_content = item.get('markdown', item.get('content', ''))[:15000] 
                         url = item.get('url', '')
                         
-                        if not url: 
-                            continue
+                        if not url: continue
                         
-                        # Extract Data using Gemini
-                        extracted_data = parse_with_gemini(raw_content, url, condo)
+                        extracted_data = parse_with_llm(raw_content, url, condo)
                         
                         if extracted_data:
                             extracted_data['scraped_at'] = datetime.datetime.now().isoformat()
@@ -95,7 +92,7 @@ def start_manual_job_async():
     thread.start()
     return True, "Scraping started in background. Refresh in a few minutes."
 
-def parse_with_gemini(markdown_text, url, condo_hint):
+def parse_with_llm(markdown_text, url, condo_hint):
     prompt = f"""
     You are a real estate data extractor. 
     Analyze the following markdown text from a property listing ({url}).
