@@ -41,28 +41,32 @@ def run_scraper_job():
                         scrape_options={"formats": ["markdown"]}
                     )
                     
-                    if isinstance(response, tuple):
-                        results = response[0]
-                    else:
-                        results = response
-
+                    res = response[0] if isinstance(response, tuple) else response
+                    
+                    if isinstance(res, dict):
+                        print(f"DEBUG: Response keys for {condo}: {res.keys()}")
+                    
                     data_list = []
-                    if isinstance(results, dict):
-                        data_list = results.get('web', results.get('data', []))
-                    elif isinstance(results, list):
-                        data_list = results
+                    if isinstance(res, list):
+                        data_list = res
+                    elif isinstance(res, dict):
+                        data_list = res.get('web') or res.get('data') or res.get('results') or []
                     
                     if not data_list:
-                        print(f"No results found for {condo} on {site}")
+                        print(f"No results found for {condo} on {site}. Raw: {str(res)[:100]}")
                         continue
                 
+                    print(f"Success! Found {len(data_list)} potential links for {condo}")
+
                     for item in data_list:
                         raw_content = item.get('markdown', item.get('content', ''))[:15000] 
                         url = item.get('url', '')
                         
-                        if not url: continue
+                        if not raw_content or len(raw_content) < 100:
+                            print(f"Skipping {url}: Content too short.")
+                            continue
                         
-                        extracted_data = parse_with_llm(raw_content, url, condo)
+                        extracted_data = parse_with_gemini(raw_content, url, condo)
                         
                         if extracted_data:
                             extracted_data['scraped_at'] = datetime.datetime.now().isoformat()
