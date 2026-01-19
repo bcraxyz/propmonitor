@@ -1,6 +1,7 @@
 import time
 import json
 import datetime
+from datetime import timezone, timedelta
 import threading
 from firecrawl import FirecrawlApp
 import google.genai as genai
@@ -80,7 +81,7 @@ def run_scraper_job():
                         extracted_data = parse_with_llm(raw_content, url, condo)
                         
                         if extracted_data and extracted_data.get('listing_id'):
-                            extracted_data['scraped_at'] = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).isoformat()
+                            extracted_data['scraped_at'] = datetime.datetime.now(timezone(timedelta(hours=8))).isoformat()
                             batch.append(extracted_data)
                             print(f"✓ Extracted: {extracted_data.get('condo_name', 'Unknown')} - {url[:60]}...")
                     
@@ -215,7 +216,7 @@ def send_digest():
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; color: white;">
             <h1 style="margin: 0; font-size: 28px; font-weight: 800;">🏠 Property Digest</h1>
             <p style="margin: 8px 0 0 0; opacity: 0.95; font-size: 15px;">
-                {len(new_listings)} new listing{"s" if len(new_listings) != 1 else ""} found • {datetime.datetime.now().strftime('%B %d, %Y')}
+                {len(new_listings)} new listing{"s" if len(new_listings) != 1 else ""} found • {datetime.datetime.now(timezone(timedelta(hours=8))).strftime('%B %d, %Y')}
             </p>
         </div>
         
