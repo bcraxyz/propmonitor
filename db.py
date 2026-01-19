@@ -40,11 +40,11 @@ def init_db():
 def save_listing(data):
     db = get_db()
     try:
-        # Upsert based on listing_id and platform
+        # listing_id and platform together must be unique
         db["listings"].upsert(data, pk=["listing_id", "platform"])
-        print(f"Saved: {data.get('condo_name')} - {data.get('listing_id')}")
+        print(f"DB Update: Saved {data.get('condo_name')} ({data.get('listing_id')})")
     except Exception as e:
-        print(f"Error saving listing: {e}")
+        print(f"Database Error: {e}")
 
 def get_unsent_listings():
     db = get_db()
