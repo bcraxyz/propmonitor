@@ -29,33 +29,46 @@ def run_scraper_job():
         db.init_db()
         
         for condo in config.TARGET_CONDOS:
-            print(f"Scraping for {condo}...")
-            
-            # Search Query
-            query = f"site:propertyguru.com.sg {condo} {config.CRITERIA_DESC}"
-            
-            try:
-                results = firecrawl.search(query, params={
-                    "pageOptions": {"fetchPageContent": True},
-                    "limit": 5 
-                })
+            # We explicitly check both platforms
+            for site in ["propertyguru.com.sg", "99.co"]:
+                print(f"Scraping for {condo} on {site}...")
                 
-                if not results or 'data' not in results:
-                    print("No results from Firecrawl")
-                    continue
-
-                for item in results['data']:
-                    raw_content = item.get('markdown', '')[:15000] 
-                    url = item.get('url', '')
+                query = f"site:{site} {condo} {config.CRITERIA_DESC}"
+                
+                try:
+                    # Modern Firecrawl SDK signature (no nested params)
+                    results = firecrawl.search(
+                        query, 
+                        limit=5,
+                        scrape_options={"formats": ["markdown"]}
+                    )
                     
-                    extracted_data = parse_with_gemini(raw_content, url, condo)
+                    # Handle Firecrawl returning a dict or a direct list
+                    data_list = results.get('data', []) if isinstance(results, dict) else results
                     
-                    if extracted_data:
-                        extracted_data['scraped_at'] = datetime.datetime.now().isoformat()
-                        db.save_listing(extracted_data)
+                    if not data_list:
+                        print(f"No results found for {condo} on {site}")
+                        continue
+                
+                    for item in data_list:
+                        # Extract markdown content and URL
+                        raw_content = item.get('markdown', item.get('content', ''))[:15000] 
+                        url = item.get('url', '')
                         
-            except Exception as e:
-                print(f"Error scraping {condo}: {e}")
+                        if not url: continue
+                        
+                        # 2. Extract Data using Gemini
+                        extracted_data = parse_with_gemini(raw_content, url, condo)
+                        
+                        if extracted_data:
+                            extracted_data['scraped_at'] = datetime.datetime.now().isoformat()
+                            db.save_listing(extracted_data)
+                    
+                    # Brief pause to respect rate limits between site searches
+                    time.sleep(1)
+                            
+                except Exception as e:
+                    print(f"Error scraping {condo} on {site}: {e}")
                 
         # Send Email Digest
         send_digest()
@@ -112,10 +125,11 @@ def parse_with_gemini(markdown_text, url, condo_hint):
           model=model,
           contents=prompt,
         )
+        # Clean response if model adds markdown blocks
         clean_json = response.text.replace("```json", "").replace("```", "").strip()
         return json.loads(clean_json)
     except Exception as e:
-        print(f"LLM Parse Error: {e}")
+        print(f"LLM parse error for {url}: {e}")
         return None
 
 def send_digest():
@@ -157,7 +171,7 @@ def send_digest():
     try:
         resend.api_key = config.RESEND_API_KEY
         resend.Emails.send({
-            "from": config.EMAIL_TO,
+            "from": config.EMAIL_FROM,
             "to": config.EMAIL_TO,
             "subject": f"New Property Listings: ({len(new_listings)})",
             "html": html_content
@@ -166,4 +180,4 @@ def send_digest():
         db.mark_as_sent([l['id'] for l in new_listings])
         print("Email sent successfully.")
     except Exception as e:
-        print(f"Email Error: {e}")
+        print(f"Email error: {e}")
