@@ -78,7 +78,7 @@ def get():
                     Div(cls="flex gap-3")(
                         Form(hx_post="/trigger", hx_swap="none", cls="inline")(
                             Button(
-                                "🔄 Scrape Now",
+                                "Scrape Now",
                                 id="scrape-btn",
                                 cls="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl active:scale-95",
                                 onclick="this.innerText='⏳ Scraping...'; this.classList.add('scraping'); setTimeout(() => location.reload(), 60000);"
@@ -97,13 +97,7 @@ def get():
             (
                 Div(cls="bg-white rounded-2xl shadow-xl p-16 text-center")(
                     H2("No listings yet", cls="text-2xl font-bold text-slate-700 mb-4"),
-                    P("Click 'Scrape Now' to start collecting property listings", cls="text-slate-500 mb-6"),
-                    Form(hx_post="/trigger", hx_swap="none")(
-                        Button(
-                            "Start Scraping",
-                            cls="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-all"
-                        )
-                    )
+                    P("Click 'Scrape Now' to start collecting property listings", cls="text-slate-500 mb-6")
                 ) if not listings else
                 
                 # Listings Table
@@ -201,48 +195,6 @@ def get():
                     )
                 )
             ),
-            
-            # Footer
-            Footer(cls="mt-8 text-center text-sm text-slate-500")(
-                P(f"Monitoring: {', '.join(config.TARGET_CONDOS)} • {config.CRITERIA_DESC}")
-            )
-        )
-    )
-
-@rt("/config")
-def get():
-    """Configuration page"""
-    return Body(cls="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen font-sans p-8")(
-        Div(cls="max-w-2xl mx-auto")(
-            Div(cls="bg-white rounded-2xl shadow-xl p-8")(
-                H1("⚙️ Configuration", cls="text-3xl font-bold text-slate-800 mb-6"),
-                
-                Div(cls="space-y-4 mb-8")(
-                    Div(
-                        H3("Target Condominiums", cls="font-bold text-slate-700 mb-2"),
-                        Ul(*[Li(condo, cls="text-slate-600") for condo in config.TARGET_CONDOS])
-                    ),
-                    Div(
-                        H3("Search Criteria", cls="font-bold text-slate-700 mb-2"),
-                        P(config.CRITERIA_DESC, cls="text-slate-600")
-                    ),
-                    Div(
-                        H3("Email Recipients", cls="font-bold text-slate-700 mb-2"),
-                        P(", ".join(config.EMAIL_TO) if isinstance(config.EMAIL_TO, list) else config.EMAIL_TO, 
-                          cls="text-slate-600")
-                    ),
-                    Div(
-                        H3("Database", cls="font-bold text-slate-700 mb-2"),
-                        P(config.DB_PATH, cls="text-slate-600 font-mono text-sm")
-                    )
-                ),
-                
-                A(
-                    "← Back to Listings",
-                    href="/",
-                    cls="inline-block bg-slate-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-slate-700 transition-all"
-                )
-            )
         )
     )
 
