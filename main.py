@@ -70,7 +70,7 @@ def get():
                         Div(cls="flex gap-4 mt-2 text-sm")(
                             P(f"Total: {stats['total']} listings", cls="text-slate-600 font-medium"),
                             P(f"Unsent: {stats['unsent']}", cls="text-indigo-600 font-bold"),
-                            P(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", cls="text-slate-500")
+                            P(f"Last updated: {datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime('%Y-%m-%d %H:%M')}", cls="text-slate-500")
                         )
                     ),
                     
