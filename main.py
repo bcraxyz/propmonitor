@@ -24,8 +24,12 @@ def format_curr(val):
 def format_date(date_str):
     if not date_str: 
         return "-"
-    try: 
-        return datetime.fromisoformat(date_str).strftime("%b %d, %H:%M")
+    try:
+        dt = datetime.fromisoformat(date_str)
+        if dt.tzinfo:
+            sg_tz = datetime.timezone(datetime.timedelta(hours=8))
+            dt = dt.astimezone(sg_tz)
+        return dt.strftime("%b %d, %H:%M")
     except: 
         return date_str
 
