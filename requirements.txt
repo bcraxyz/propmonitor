@@ -1,0 +1,8 @@
+python-fasthtml
+uvicorn
+python-dotenv
+firecrawl-py
+google-genai
+resend
+apscheduler
+sqlite-utils
