@@ -1,5 +1,5 @@
 from fasthtml.common import *
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import agent, db, config
 
 # Initialize FastHTML app with Tailwind CSS
@@ -27,7 +27,7 @@ def format_date(date_str):
     try:
         dt = datetime.fromisoformat(date_str)
         if dt.tzinfo:
-            sg_tz = datetime.timezone(datetime.timedelta(hours=8))
+            sg_tz = timezone(timedelta(hours=8))
             dt = dt.astimezone(sg_tz)
         return dt.strftime("%b %d, %H:%M")
     except: 
