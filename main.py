@@ -27,7 +27,7 @@ def get():
                 ),
                 Div(cls="flex gap-3")(
                     Form(hx_post="/trigger", hx_swap="none")(
-                        Button("Trigger All-Site Scrape", 
+                        Button("Scrape Now", 
                                cls="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition shadow-lg active:scale-95",
                                onclick="this.innerText='Agent Running...';")
                     )
